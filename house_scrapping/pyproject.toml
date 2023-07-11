@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "house-scrapping"
+version = "0.1.0"
+description = ""
+authors = ["Pedro Tiago Da Costa Machado Nogueira Matias <tiago.matias@ceiia.com>"]
+readme = "README.md"
+packages = [{include = "house_scrapping"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+beautifulsoup4 = "*"
+requests = "*"
+chromedriver-autoinstaller = "*"
+selenium = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
