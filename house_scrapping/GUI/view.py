@@ -166,26 +166,25 @@ class PropertyInputView:
             
         self.distrito_dropdown_label = ttk.Label(self.frame_district, text="Seloecionar Distrito")
         self.distrito_dropdown_label.pack(side="top")
-        options = ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5']
-        distrito_dropdown_var = tk.StringVar(value=options[0])
-        self.distrito_dropdown = ttk.Combobox(self.frame_district, textvariable=distrito_dropdown_var, values=options)
+        self.options_distrito = self.controller.get_distritos()
+        self.distrito_dropdown_var = tk.StringVar(value=self.options_distrito[-1])
+        self.distrito_dropdown = ttk.Combobox(self.frame_district, textvariable=self.distrito_dropdown_var, values=self.options_distrito)
         self.distrito_dropdown.bind("<<ComboboxSelected>>", self.on_distrito_dropdown_selected)
         self.distrito_dropdown.pack(side="left")
         
         self.concelho_dropdown_label = ttk.Label(self.frame_concelho, text="Selecionar Concelho")
         self.concelho_dropdown_label.pack(side="top")
-        options = ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5']
-        concelho_dropdown_var = tk.StringVar(value=options[0])
-        self.concelho_dropdown = ttk.Combobox(self.frame_concelho, textvariable=concelho_dropdown_var, values=options)
+        self.options_concelho = self.controller.get_concelhos('All')
+        self.concelho_dropdown_var = tk.StringVar(value=self.options_concelho[0])
+        self.concelho_dropdown = ttk.Combobox(self.frame_concelho, textvariable=self.concelho_dropdown_var, values=self.options_concelho, state="disabled")
         self.concelho_dropdown.bind("<<ComboboxSelected>>", self.on_concelho_dropdown_selected)
         self.concelho_dropdown.pack(side="left")
         
         self.freguesia_dropdown_label = ttk.Label(self.frame_freguesia, text="Selecionar Freguesia")
         self.freguesia_dropdown_label.pack(side="top")
-        options = ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5']
-        freguesia_dropdown_var = tk.StringVar(value=options[0])
-        self.freguesia_dropdown = ttk.Combobox(self.frame_freguesia, textvariable=freguesia_dropdown_var, values=options)
-        self.freguesia_dropdown.bind("<<ComboboxSelected>>", self.on_freguesia_dropdown_selected)
+        self.options_freguesia = self.controller.get_freguesias('All', 'All')
+        self.freguesia_dropdown_var = tk.StringVar(value=self.options_freguesia[0])
+        self.freguesia_dropdown = ttk.Combobox(self.frame_freguesia, textvariable=self.freguesia_dropdown_var, values=self.options_freguesia, state="disabled"  )
         self.freguesia_dropdown.pack(side="left")
 
         # Loop to create checkboxes and labels for property types
@@ -197,7 +196,7 @@ class PropertyInputView:
             i += 1
             self.property_type_vars.append(var)
             
-            
+
     def run(self):
         """
         Run the main event loop of the Tkinter application.
@@ -221,6 +220,7 @@ class PropertyInputView:
             self.entry_num_bathrooms.delete(0, tk.END)
             self.entry_num_bathrooms.insert(0, str( updated_value ) )
             self.entry_num_bathrooms.config(state="readonly")
+            
     def increase_bathrooms(self):
         """
         Handle the increase of the number of bathrooms.
@@ -235,6 +235,7 @@ class PropertyInputView:
             self.entry_num_bathrooms.delete(0, tk.END)
             self.entry_num_bathrooms.insert(0, str( updated_value ) )
             self.entry_num_bathrooms.config(state="readonly")
+            
     def decrease_rooms(self):
         """
         Handle the decrease of the number of rooms.
@@ -249,6 +250,7 @@ class PropertyInputView:
             self.entry_num_rooms.delete(0, tk.END)
             self.entry_num_rooms.insert(0, str( updated_value ) )
             self.entry_num_rooms.config(state="readonly")
+            
     def increase_rooms(self):
         """
         Handle the increase of the number of rooms.
@@ -265,31 +267,25 @@ class PropertyInputView:
             self.entry_num_rooms.config(state="readonly")
 
     def on_distrito_dropdown_selected(self, event):
-        """
-        Handle the selection of a dropdown menu option.
-
-        If a controller is set, call the controller's `on_dropdown_selected` method.
-
-        """
-        print("Distrito Dropdown selected")
-        print(self.distrito_dropdown.get())
+            self.options_concelho = self.controller.get_concelhos( event.widget.get() )
+            self.concelho_dropdown_var = tk.StringVar(value=self.options_concelho[-1])
+            
+            self.options_freguesia = self.controller.get_freguesias()
+            self.freguesia_dropdown_var = tk.StringVar(value=self.options_freguesia[0])  
+            self.freguesia_dropdown.config( textvariable=self.freguesia_dropdown_var, values=self.options_freguesia, state="disabled")
+            
+            if event.widget.get() == 'All':
+                self.concelho_dropdown.config( textvariable=self.concelho_dropdown_var, values=self.options_concelho, state="disabled")
+                return
+            
+            self.concelho_dropdown.config(textvariable=self.concelho_dropdown_var, values=self.options_concelho, state="normal")
         
     def on_concelho_dropdown_selected(self, event):
-        """
-        Handle the selection of a dropdown menu option.
+        self.options_freguesia = self.controller.get_freguesias( self.distrito_dropdown.get(), event.widget.get())
+        self.freguesia_dropdown_var = tk.StringVar(value=self.options_freguesia[0])
 
-        If a controller is set, call the controller's `on_dropdown_selected` method.
-
-        """
-        print("Concelho Dropdown selected")
-        print(self.concelho_dropdown.get())
+        if event.widget.get() == 'All':
+            self.freguesia_dropdown.config( textvariable=self.freguesia_dropdown_var, values=self.options_freguesia, state="disabled")
+            return
         
-    def on_freguesia_dropdown_selected(self, event):
-        """
-        Handle the selection of a dropdown menu option.
-
-        If a controller is set, call the controller's `on_dropdown_selected` method.
-
-        """
-        print("Freguesia Dropdown selected")
-        print(self.freguesia_dropdown.get())
+        self.freguesia_dropdown.config( textvariable=self.freguesia_dropdown_var, values=self.options_freguesia, state="normal")

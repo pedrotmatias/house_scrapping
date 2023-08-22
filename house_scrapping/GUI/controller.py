@@ -2,6 +2,9 @@ from view import PropertyInputView
 from model import PropertyModel
 import tkinter as tk
 from house_scrapping.remax_url_scrapper import RemaxURLScraper
+import pandas as pd
+import os
+
 class PropertyController:
     def __init__(self, view, model=None):
         """
@@ -13,8 +16,55 @@ class PropertyController:
         """
         self.view = view
         self.model = model
+        self.data = {}
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the full path to the Excel file
+        file_path = os.path.join(current_dir, '..', 'Data', 'freguesias_portugal.xlsx')
+        
+        try:
+            # Read the Excel file into a pandas DataFrame
+            df = pd.read_excel(file_path)
+
+            # Populate the data dictionary
+            for _, row in df.iterrows():
+                distrito = row['distrito']
+                concelho = row['concelho']
+                freguesia = row['freguesia']
+
+                if distrito not in self.data:
+                    self.data[distrito] = {}
+
+                if concelho not in self.data[distrito]:
+                    self.data[distrito][concelho] = []
+
+                self.data[distrito][concelho].append(freguesia)
+
+            # Add "All" entries for each unique concelho within each distrito
+            for distrito in self.data:
+                for concelho in self.data[distrito]:
+                    self.data[distrito][concelho].insert(0, "All")
+                self.data[distrito]["All"] = ["All"]
+            self.data["All"] = {"All": ["All"]}
+
+        except pd.errors.ParserError:
+            print("An error occurred while parsing the Excel file.")
+        except pd.errors.EmptyDataError:
+            print("The Excel file is empty or contains no data.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+
+        # for distrito, concelhos in self.data.items():
+        #     print(f"Distrito: {distrito}")
+        #     for concelho, freguesias in concelhos.items():
+        #         print(f"  Concelho: {concelho}")
+        #         for freguesia in freguesias:
+        #             print(f"    Freguesia: {freguesia}")
+
+
         self.view.set_controller(self)
-        # You can create your model instance here if needed
+
 
     def get_property_types(self):
         return self.model.get_property_types()
@@ -91,6 +141,45 @@ class PropertyController:
         remax_scrapper.set_search_param("bathrooms", self.model.get_num_bathrooms())
         remax_search_query = remax_scrapper.construct_search_url()
         print( remax_search_query )
+        
+    def get_distritos(self):
+        """
+        Get the list of distritos.
+
+        Returns:
+            list: The list of distritos.
+        """
+        return list(self.data.keys())
+    
+    def get_concelhos(self, distrito=None):
+        """
+        Get the list of concelhos for a given distrito.
+
+        Args:
+            distrito (str): The distrito.
+
+        Returns:
+            list: The list of concelhos.
+        """
+        if distrito is None:
+            distrito = "All"
+        return list(self.data[distrito].keys())
+    
+    def get_freguesias(self, distrito=None, concelho=None):
+        """
+        Get the list of freguesias for a given distrito and concelho.
+
+        Args:
+            distrito (str): The distrito.
+            concelho (str): The concelho.
+
+        Returns:
+            list: The list of freguesias.
+        """
+        if distrito is None or concelho is None:
+            distrito = "All"
+            concelho = "All"
+        return self.data[distrito][concelho]
     
     def decrease_bathrooms(self, user_input):
         """
